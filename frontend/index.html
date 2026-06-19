@@ -1,0 +1,868 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Algora – AI Health Monitor</title>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Readex+Pro:wght@300;400;600;800&display=swap" rel="stylesheet">
+<link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+
+<style>
+    :root {
+        --primary: #2563eb;
+        --primary-dark: #1e40af;
+        --secondary: #64748b;
+        --bg: #f8fafc;
+        --surface: #ffffff;
+        --text-main: #0f172a;
+        --text-muted: #475569;
+        --border: #e2e8f0;
+        --shadow-md: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+        --radius: 18px;
+        --status-good: #16a34a;
+        --status-care: #059669;
+        --status-error: #dc2626;
+    }
+
+    body.dark-mode {
+        --bg: #0f172a;
+        --surface: #1e293b;
+        --text-main: #f1f5f9;
+        --text-muted: #94a3b8;
+        --border: #334155;
+    }
+
+    input::-webkit-outer-spin-button,
+    input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+    input[type=number] { -moz-appearance: textfield; }
+
+    * { box-sizing: border-box; scroll-behavior: smooth; }
+
+    body {
+        margin: 0;
+        font-family: 'Inter', sans-serif;
+        background-color: var(--bg);
+        color: var(--text-main);
+        overflow-x: hidden;
+        transition: background 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    body::before {
+        content: '';
+        position: fixed;
+        top: 0; left: 0; width: 100%; height: 100%;
+        background: radial-gradient(circle at 50% 50%, rgba(37, 99, 235, 0.05) 0%, transparent 80%);
+        pointer-events: none;
+        z-index: -1;
+    }
+
+    header {
+        position: fixed;
+        top: 0;
+        width: 100%;
+        padding: 15px 40px;
+        background: rgba(var(--surface), 0.7);
+        backdrop-filter: blur(15px);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        z-index: 1000;
+        transition: all 0.4s ease;
+        border-bottom: 1px solid var(--border);
+    }
+
+    header.nav-up { transform: translateY(-100%); }
+    header.nav-down { box-shadow: var(--shadow-md); }
+
+    .logo-text {
+        font-family: 'Readex Pro';
+        font-weight: 800;
+        font-size: 1.5rem;
+        color: var(--primary);
+        display: flex; gap: 10px; align-items: center;
+        animation: pulseLogo 3s infinite;
+    }
+
+    @keyframes pulseLogo {
+        0% { opacity: 1; }
+        50% { opacity: 0.7; }
+        100% { opacity: 1; }
+    }
+
+    .hero {
+        background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
+        padding: 160px 20px 100px;
+        text-align: center;
+        color: white;
+        clip-path: ellipse(160% 100% at 50% 0%);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .hero::after {
+        content: '';
+        position: absolute;
+        top: -50%; left: -50%; width: 200%; height: 200%;
+        background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 60%);
+        animation: rotateGlow 20s linear infinite;
+    }
+
+    @keyframes rotateGlow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+    .main-logo-icon { font-size: 5rem; margin-bottom: 25px; color: white; transition: 0.5s; display: inline-block; }
+    .main-logo-icon:hover { transform: scale(1.1) rotate(5deg); }
+
+    .title {
+        font-family: 'Readex Pro';
+        font-size: clamp(2.2rem, 5vw, 3.8rem);
+        font-weight: 800;
+        margin: 0;
+        letter-spacing: -1.5px;
+        animation: fadeInDown 1s ease;
+    }
+
+    .subtitle {
+        font-size: 1.2rem;
+        opacity: 0.85;
+        margin-top: 15px;
+        max-width: 650px;
+        margin-inline: auto;
+        animation: fadeInUp 1s ease 0.2s backwards;
+    }
+
+    .container {
+        max-width: 1100px;
+        margin: -60px auto 60px;
+        padding: 0 20px;
+        position: relative;
+        z-index: 10;
+    }
+
+    .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 25px;
+        margin-bottom: 40px;
+    }
+
+    .card {
+        background: var(--surface);
+        padding: 30px;
+        border-radius: var(--radius);
+        box-shadow: var(--shadow-md);
+        border: 1px solid var(--border);
+        transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+    }
+
+    .card:hover { transform: translateY(-12px); box-shadow: 0 20px 40px rgba(0,0,0,0.1); border-color: var(--primary); }
+    .card h3 { font-family: 'Readex Pro'; color: var(--primary); display: flex; gap: 12px; margin-top:0; }
+
+    .main-panel {
+        background: var(--surface);
+        padding: 45px;
+        border-radius: 25px;
+        box-shadow: 0 30px 60px -12px rgba(0,0,0,0.12);
+        border: 1px solid var(--border);
+        margin-bottom: 30px;
+        transition: 0.4s;
+    }
+
+    .selector { display: flex; background: rgba(0,0,0,0.05); padding: 6px; border-radius: 14px; margin-bottom: 35px; gap: 8px; }
+
+    .type-btn {
+        flex: 1; padding: 12px; border: none; background: transparent; border-radius: 10px;
+        cursor: pointer; font-family: 'Readex Pro'; font-weight: 600; color: var(--text-muted);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .type-btn.active { background: var(--primary); color: white; box-shadow: 0 10px 20px rgba(37, 99, 235, 0.3); transform: scale(1.02); }
+
+    .input-wrap { position: relative; margin-bottom: 20px; transition: 0.3s; }
+    .input-wrap i { position: absolute; left: 18px; top: 50%; transform: translateY(-50%); color: var(--primary); opacity: 0.8; transition: 0.3s; }
+
+    .input {
+        width: 100%; padding: 16px 16px 16px 52px; border: 2px solid var(--border);
+        border-radius: 14px; font-size: 1rem; transition: all 0.3s ease;
+        background: var(--surface); color: var(--text-main);
+    }
+
+    .input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1); transform: translateY(-2px); }
+
+    .btn-analyze {
+        width: 100%; padding: 18px; background: var(--primary); color: white; border: none;
+        border-radius: 14px; font-family: 'Readex Pro'; font-weight: 700; cursor: pointer;
+        transition: all 0.4s ease;
+        box-shadow: 0 10px 20px -5px rgba(37, 99, 235, 0.4);
+        position: relative; overflow: hidden;
+    }
+
+    .btn-analyze:hover { transform: translateY(-4px); box-shadow: 0 15px 30px -5px rgba(37, 99, 235, 0.6); }
+
+    .result-box {
+        margin-top: 35px; padding: 25px; border-radius: 15px;
+        background: rgba(37, 99, 235, 0.03);
+        border-left: 5px solid var(--primary);
+        transition: 0.5s;
+    }
+
+    .status-badge { display: inline-block; padding: 6px 16px; border-radius: 30px; font-weight: 700; font-size: 0.8rem; text-transform: uppercase; }
+
+    .history-card { background: var(--surface); padding: 25px; border-radius: var(--radius); border: 1px solid var(--border); box-shadow: var(--shadow-md); }
+    .history-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--border); }
+
+    .theme-btn {
+        background: var(--surface); border: 1px solid var(--border); color: var(--text-main); cursor: pointer;
+        width: 40px; height: 40px; border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        transition: 0.4s;
+    }
+
+    .footer { text-align: center; padding: 60px 20px; color: var(--text-muted); font-family: 'Readex Pro'; font-size: 0.9rem; }
+
+    .spinner { width: 35px; height: 35px; border: 4px solid rgba(37, 99, 235, 0.1); border-top-color: var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 20px auto; }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes shake { 0%, 100% {transform: translateX(0);} 25% {transform: translateX(-6px);} 75% {transform: translateX(6px);} }
+    @keyframes fadeInDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+</style>
+</head>
+<body>
+<header id="mainHeader">
+    <div class="logo-text">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 60" height="38" style="display:block">
+          <defs>
+            <linearGradient id="hDropG" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" style="stop-color:#3b82f6"/>
+              <stop offset="100%" style="stop-color:#1e40af"/>
+            </linearGradient>
+          </defs>
+          <ellipse cx="26" cy="51" rx="13" ry="4" fill="rgba(30,64,175,0.15)"/>
+          <path d="M26 6 C26 6 13 22 13 34 C13 41.7 18.9 48 26 48 C33.1 48 39 41.7 39 34 C39 22 26 6 26 6Z" fill="url(#hDropG)"/>
+          <ellipse cx="21" cy="29" rx="4" ry="6" fill="#60a5fa" opacity="0.4"/>
+          <ellipse cx="26" cy="36" rx="5" ry="8" fill="#dbeafe" opacity="0.85"/>
+          <line x1="26" y1="28" x2="26" y2="44" stroke="#2563eb" stroke-width="0.7" opacity="0.6"/>
+          <circle cx="36" cy="21" r="1.5" fill="white" opacity="0.9"/>
+          <circle cx="40" cy="29" r="1.5" fill="white" opacity="0.9"/>
+          <circle cx="42" cy="15" r="1.5" fill="white" opacity="0.9"/>
+          <line x1="26" y1="26" x2="36" y2="21" stroke="white" stroke-width="0.7" opacity="0.7"/>
+          <line x1="36" y1="21" x2="40" y2="29" stroke="white" stroke-width="0.7" opacity="0.7"/>
+          <line x1="36" y1="21" x2="42" y2="15" stroke="white" stroke-width="0.7" opacity="0.7"/>
+          <path d="M16 52 Q19 49.5 22 52 Q25 54.5 28 52 Q31 49.5 34 52" fill="none" stroke="#3b82f6" stroke-width="1.2" stroke-linecap="round"/>
+          <text x="50" y="37" font-family="'Readex Pro','Trebuchet MS',sans-serif" font-weight="800" font-size="24" fill="#1e40af" letter-spacing="-0.5">ALGORA</text>
+        </svg>
+    </div>
+    <div style="display: flex; align-items: center; gap: 20px;">
+        <button class="theme-btn" onclick="toggleTheme()"><i id="themeIcon" class="fa fa-moon"></i></button>
+        <div style="font-size: 0.75rem; font-weight: 600; background: #eef2ff; color: #2563eb; padding: 5px 14px; border-radius: 20px; border: 1px solid rgba(37,99,235,0.1); animation: pulseLogo 2s infinite;">AI ACTIVE</div>
+    </div>
+</header>
+
+<div class="hero">
+    <div class="main-logo-icon" data-aos="zoom-in" style="margin-bottom:20px;">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 90" height="110" style="display:block; margin:0 auto; filter: drop-shadow(0 0 24px rgba(255,255,255,0.35));">
+          <defs>
+            <linearGradient id="heroDropG" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" style="stop-color:#93c5fd"/>
+              <stop offset="100%" style="stop-color:#dbeafe"/>
+            </linearGradient>
+          </defs>
+          <!-- Shadow -->
+          <ellipse cx="40" cy="82" rx="18" ry="5" fill="rgba(255,255,255,0.12)"/>
+          <!-- Main drop body -->
+          <path d="M40 5 C40 5 18 30 18 52 C18 64.5 27.8 74 40 74 C52.2 74 62 64.5 62 52 C62 30 40 5 40 5Z" fill="url(#heroDropG)"/>
+          <!-- Inner highlight -->
+          <ellipse cx="32" cy="44" rx="6" ry="9" fill="white" opacity="0.35"/>
+          <!-- Center reflection -->
+          <ellipse cx="40" cy="56" rx="7" ry="11" fill="white" opacity="0.8"/>
+          <!-- Vein line -->
+          <line x1="40" y1="42" x2="40" y2="68" stroke="#93c5fd" stroke-width="1" opacity="0.8"/>
+          <!-- Circuit dots -->
+          <circle cx="54" cy="34" r="2.2" fill="white" opacity="0.9"/>
+          <circle cx="60" cy="46" r="2.2" fill="white" opacity="0.9"/>
+          <circle cx="63" cy="24" r="2.2" fill="white" opacity="0.9"/>
+          <!-- Circuit lines -->
+          <line x1="40" y1="40" x2="54" y2="34" stroke="white" stroke-width="1" opacity="0.7"/>
+          <line x1="54" y1="34" x2="60" y2="46" stroke="white" stroke-width="1" opacity="0.7"/>
+          <line x1="54" y1="34" x2="63" y2="24" stroke="white" stroke-width="1" opacity="0.7"/>
+          <!-- Wave under drop -->
+          <path d="M24 78 Q29 74.5 34 78 Q39 81.5 44 78 Q49 74.5 54 78" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" opacity="0.7"/>
+        </svg>
+    </div>
+    <h1 class="title">Algae Health Monitor</h1>
+    <p class="subtitle">Next-gen AI diagnostics for optimal algae cultivation and biomass monitoring.</p>
+</div>
+
+<div class="container">
+    <div class="grid">
+        <div class="card" data-aos="fade-right" data-aos-delay="200">
+            <h3><i class="fa fa-chart-line"></i> Optimal Ranges</h3>
+            <div id="spirulinaRange"><strong>Spirulina:</strong><br>Temp: 27–32°C | pH: 8.2–9.8 | Light: 350-800lx</div>
+            <div id="chlorellaRange" style="display:none"><strong>Chlorella:</strong><br>Temp: 24–30°C | pH: 6.8–7.8 | Light: 250-700lx</div>
+        </div>
+        <div class="card" data-aos="fade-left" data-aos-delay="300">
+            <h3><i class="fa fa-lightbulb"></i> Smart Tips</h3>
+            <div id="smartTips" style="font-size: 0.95rem; line-height: 1.6; color: var(--text-muted); transition: 0.5s;">
+                Adjust inputs to receive real-time biological cultivation insights.
+            </div>
+        </div>
+    </div>
+
+    <div class="main-panel" data-aos="fade-up">
+        <div class="selector">
+            <button class="type-btn active" onclick="setType('spirulina', this)">Spirulina</button>
+            <button class="type-btn" onclick="setType('chlorella', this)">Chlorella</button>
+        </div>
+        <div class="input-wrap">
+            <i class="fa fa-temperature-three-quarters"></i>
+            <input type="number" class="input" id="temp" placeholder="Temperature (°C)" oninput="updateSmartTips()">
+        </div>
+        <div class="input-wrap">
+            <i class="fa fa-sun"></i>
+            <input type="number" class="input" id="light" placeholder="Light Intensity (Lux)" oninput="updateSmartTips()">
+        </div>
+        <div class="input-wrap">
+            <i class="fa fa-flask"></i>
+            <input type="number" step="0.1" class="input" id="ph" placeholder="pH Level" oninput="updateSmartTips()">
+        </div>
+        <button class="btn-analyze" onclick="analyze()">Run Algora AI Analysis</button>
+        <div id="result" class="result-box">Analysis recommendations will appear here.</div>
+        <button id="downloadBtn" onclick="downloadReport()" style="display:none; margin-top:15px; background:none; border:1px solid var(--primary); color:var(--primary); padding:8px 15px; border-radius:10px; cursor:pointer; font-weight:600; transition:0.3s;">
+            <i class="fa fa-file-pdf"></i> Download PDF Report
+        </button>
+    </div>
+
+    <div class="history-card" data-aos="fade-up">
+        <h3 style="font-family: 'Readex Pro'; margin-top:0;"><i class="fa fa-history"></i> Recent Analyses</h3>
+        <div id="historyList"><p style="color:var(--text-muted); font-size:0.9rem;">No data yet.</p></div>
+    </div>
+</div>
+
+<div class="footer">
+    <div><i class="fa fa-envelope"></i> ya.business55@gmail.com | <i class="fa fa-phone"></i> 01070050167</div>
+    <div style="margin-top:15px; opacity: 0.6;">Algora Intelligence © 2026</div>
+</div>
+
+<script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<script>
+    AOS.init({ duration: 1000, once: true });
+
+    const BIOME_DATA = {
+        spirulina: {
+            temp: [27, 32], ph: [8.2, 9.8], light: [350, 800],
+            general_tips: [
+                "Maintain alkalinity high to ensure carbon availability for photosynthesis.",
+                "Agitation is crucial to prevent oxygen buildup and ensure uniform light exposure.",
+                "Harvest during peak sun hours to maximize biomass protein content."
+            ]
+        },
+        chlorella: {
+            temp: [24, 30], ph: [6.8, 7.8], light: [250, 700],
+            general_tips: [
+                "Ensure filtered water to avoid contamination from competing protozoa.",
+                "CO2 supplementation is vital for doubling biomass yields in Chlorella.",
+                "Avoid light shock; transition intensity gradually during the morning phase."
+            ]
+        }
+    };
+
+    function toggleTheme() {
+        document.body.classList.toggle('dark-mode');
+        document.getElementById('themeIcon').className = document.body.classList.contains('dark-mode') ? 'fa fa-sun' : 'fa fa-moon';
+    }
+
+    let lastScrollY = window.scrollY;
+    const header = document.getElementById('mainHeader');
+    window.addEventListener('scroll', () => {
+        if (lastScrollY < window.scrollY && window.scrollY > 100) header.classList.add('nav-up');
+        else { header.classList.remove('nav-up'); header.classList.add('nav-down'); }
+        if (window.scrollY < 50) header.classList.remove('nav-down');
+        lastScrollY = window.scrollY;
+    });
+
+    let currentType = "spirulina";
+
+    function setType(type, btn) {
+        document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentType = type;
+        document.getElementById('spirulinaRange').style.display = type === 'spirulina' ? 'block' : 'none';
+        document.getElementById('chlorellaRange').style.display = type === 'chlorella' ? 'block' : 'none';
+        document.getElementById('temp').value = "";
+        document.getElementById('light').value = "";
+        document.getElementById('ph').value = "";
+        document.getElementById('result').innerHTML = "Analysis recommendations will appear here.";
+        document.getElementById('smartTips').innerHTML = "System standby. Enter environmental parameters to begin AI analysis.";
+        updateSmartTips();
+    }
+
+    function updateSmartTips() {
+        const temp = parseFloat(document.getElementById('temp').value);
+        const light = parseFloat(document.getElementById('light').value);
+        const ph = parseFloat(document.getElementById('ph').value);
+        const tipsContainer = document.getElementById('smartTips');
+        const data = BIOME_DATA[currentType];
+        let advice = "";
+
+        if (!temp && !light && !ph) {
+            advice = "System standby. Enter environmental parameters to begin AI analysis.";
+        } else {
+            if (temp > data.temp[1]) advice = "⚠️ <strong>Heat Warning:</strong> High temperature detected. Increase evaporation cooling or shading to prevent cell death.";
+            else if (temp > 0 && temp < data.temp[0]) advice = "❄️ <strong>Cold Alert:</strong> Growth rate will significantly lag. Consider external heating for optimal biomass.";
+            else if (ph > data.ph[1]) advice = "🧪 <strong>Alkalinity High:</strong> pH exceeds threshold. Risk of nutrient precipitation. Add CO2 or diluted organic acid.";
+            else if (ph > 0 && ph < data.ph[0]) advice = "🧪 <strong>Acidity Risk:</strong> pH is too low for this species. Competition from unwanted algae may occur.";
+            else if (light > data.light[1]) advice = "☀️ <strong>Light Saturation:</strong> High intensity risks photo-inhibition. Use shade nets to protect chlorophyll.";
+            else {
+                const randomTip = data.general_tips[Math.floor(Math.random() * data.general_tips.length)];
+                advice = "✅ <strong>Environment Stable:</strong> Parameters look good. Tip: " + randomTip;
+            }
+        }
+
+        tipsContainer.style.opacity = "0";
+        setTimeout(() => { tipsContainer.innerHTML = advice; tipsContainer.style.opacity = "1"; }, 150);
+    }
+
+    let lastAnalysisData = null;
+
+    function analyze() {
+        const inputs = ['temp', 'light', 'ph'];
+        let valid = true;
+        inputs.forEach(id => {
+            const el = document.getElementById(id);
+            if (!el.value) {
+                el.parentElement.style.animation = "shake 0.4s ease";
+                el.style.borderColor = "#ef4444";
+                valid = false;
+                setTimeout(() => el.parentElement.style.animation = "", 400);
+            } else { el.style.borderColor = ""; }
+        });
+        if (!valid) return;
+
+        const resultDiv = document.getElementById('result');
+        resultDiv.innerHTML = '<div class="spinner"></div>';
+
+        const payload = {
+            temp: document.getElementById('temp').value,
+            light: document.getElementById('light').value,
+            ph: document.getElementById('ph').value,
+            type: currentType
+        };
+
+        fetch("http://127.0.0.1:5000/predict", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+        })
+        .then(r => r.json())
+        .then(data => {
+            let statusText = data.status;
+            // Remove any percentage from status
+            statusText = statusText.replace(/\s*\(?\d+(\.\d+)?%\)?\s*/g, '').trim();
+            let badgeStyle = "background:#fee2e2; color:#991b1b";
+            let displayStatus = 'NON-HEALTHY';
+            if (statusText.toLowerCase() === "healthy") { displayStatus = 'HEALTHY'; badgeStyle = "background:#dcfce7; color:#166534"; }
+            else if (statusText.toLowerCase().includes("minor") || statusText.toLowerCase().includes("care")) { displayStatus = 'NEED CARE'; badgeStyle = "background:#fef3c7; color:#92400e; border: 1px solid #f59e0b;"; }
+
+            let html = `<div style="animation: fadeInUp 0.5s ease">`;
+            html += `<span class="status-badge" style="${badgeStyle}">${displayStatus}</span>`;
+            html += `<div style="margin-top:20px"><strong>Algora Analysis:</strong><br>`;
+            data.explain.forEach(e => html += `• ${e}<br>`);
+            html += `</div><div style="margin-top:15px"><strong>Recommended Actions:</strong><br>`;
+            data.recommend.forEach(r => html += `• ${r}<br>`);
+            html += `</div></div>`;
+            resultDiv.innerHTML = html;
+
+            lastAnalysisData = {
+                status: displayStatus,
+                explain: data.explain,
+                recommend: data.recommend,
+                payload: payload,
+                timestamp: new Date().toLocaleString()
+            };
+
+            document.getElementById('downloadBtn').style.display = "block";
+            updateHistory(displayStatus, payload.temp);
+        })
+        .catch(() => {
+            resultDiv.innerHTML = '<p style="color:#ef4444">Connection Error: Ensure your Algora AI backend is running on port 5000.</p>';
+        });
+    }
+
+    function updateHistory(status, temp) {
+        const list = document.getElementById('historyList');
+        if (list.innerText.includes("No data")) list.innerHTML = "";
+        const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        list.insertAdjacentHTML('afterbegin', `
+            <div class="history-item">
+                <span><strong>${status}</strong> (${temp}°C)</span>
+                <span style="font-size:0.8rem; color:var(--text-muted)">${time}</span>
+            </div>
+        `);
+    }
+
+    /* ================================================================
+       ALGORA — PROFESSIONAL PDF REPORT GENERATOR
+       ================================================================ */
+    function downloadReport() {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+        const W = doc.internal.pageSize.getWidth();   // 210
+        const H = doc.internal.pageSize.getHeight();  // 297
+
+        const C = {
+            navy:      [13,  27,  71],
+            blue:      [30,  64, 175],
+            mid:       [37,  99, 235],
+            sky:       [59, 130, 246],
+            lightBlue: [219,234,254],
+            iceBlue:   [239,246,255],
+            white:     [255,255,255],
+            slate:     [71,  85, 105],
+            muted:     [100,116,139],
+            border:    [226,232,240],
+            bg:        [248,250,252],
+            green:     [16, 185, 129],
+            greenDark: [4,  120,  87],
+            greenLight:[209,250,229],
+            red:       [220, 38,  38],
+            redLight:  [254,226,226],
+            teal:      [20, 184, 166],
+        };
+
+        // ── 1. DEEP NAVY HEADER BAR ──────────────────────────────────────
+        doc.setFillColor(...C.navy);
+        doc.rect(0, 0, W, 52, 'F');
+
+        // Diagonal light accent
+        doc.setFillColor(...C.blue);
+        doc.triangle(0, 0, 110, 0, 0, 52, 'F');
+
+        // Thin cyan accent strip at bottom of header
+        doc.setFillColor(...C.sky);
+        doc.rect(0, 49, W, 3, 'F');
+
+        // ── 2. SVG LOGO (drawn with jsPDF primitives) ───────────────────
+        // Water-drop shape
+        const lx = 13, ly = 6;
+
+        // Outer drop shadow
+        doc.setFillColor(20, 50, 130);
+        doc.ellipse(lx + 13.5, ly + 28, 11, 10, 'F');
+
+        // Main drop body
+        doc.setFillColor(...C.mid);
+        doc.ellipse(lx + 13, ly + 26, 10, 9, 'F');
+
+        // Drop tip (triangle pointing up)
+        doc.setFillColor(...C.mid);
+        doc.triangle(lx + 7, ly + 22, lx + 19, ly + 22, lx + 13, ly + 11, 'F');
+
+        // Inner highlight
+        doc.setFillColor(...C.sky);
+        doc.ellipse(lx + 10, ly + 21, 4, 3.5, 'F');
+
+        // Leaf shape inside drop
+        doc.setFillColor(...C.lightBlue);
+        doc.ellipse(lx + 13, ly + 25, 5, 7, 'F');
+
+        // Leaf vein line
+        doc.setDrawColor(...C.mid);
+        doc.setLineWidth(0.5);
+        doc.line(lx + 13, ly + 18, lx + 13, ly + 32);
+
+        // Small circuit dots
+        doc.setFillColor(...C.white);
+        [[lx+17,ly+16],[lx+19,ly+20],[lx+21,ly+14]].forEach(([cx,cy]) => {
+            doc.circle(cx, cy, 1.2, 'F');
+        });
+        // Circuit lines
+        doc.setDrawColor(...C.white);
+        doc.setLineWidth(0.4);
+        doc.line(lx+13, ly+18, lx+17, ly+16);
+        doc.line(lx+17, ly+16, lx+19, ly+20);
+        doc.line(lx+17, ly+16, lx+21, ly+14);
+
+        // Wave line under drop
+        doc.setDrawColor(...C.sky);
+        doc.setLineWidth(1);
+        doc.lines([[4,0],[4,-2],[4,2],[4,0]], lx+3, ly+37, [1,1], 'S');
+
+        // ── 3. BRAND NAME ────────────────────────────────────────────────
+        doc.setTextColor(...C.white);
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(28);
+        doc.text('ALGORA', lx + 28, ly + 26);
+
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(9);
+        doc.setTextColor(...C.lightBlue);
+        doc.text('AI-Powered Algae Health Monitor', lx + 28, ly + 34);
+
+        // ── 4. RIGHT SIDE — REPORT META ──────────────────────────────────
+        doc.setTextColor(...C.white);
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(11);
+        doc.text('ANALYSIS REPORT', W - 14, 18, { align: 'right' });
+
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(8);
+        doc.setTextColor(...C.lightBlue);
+        const ts = lastAnalysisData ? lastAnalysisData.timestamp : new Date().toLocaleString();
+        doc.text(ts, W - 14, 25, { align: 'right' });
+
+        // Report ID
+        const reportId = 'RPT-' + Date.now().toString(36).toUpperCase().slice(-8);
+        doc.text('ID: ' + reportId, W - 14, 31, { align: 'right' });
+
+        // ── 5. SENSOR PARAMETERS SECTION ─────────────────────────────────
+        let y = 62;
+
+        // Section card background — soft blue-gray
+        doc.setFillColor(235, 242, 255);
+        doc.roundedRect(10, y, W - 20, 52, 4, 4, 'F');
+        doc.setDrawColor(...C.mid);
+        doc.setLineWidth(0.5);
+        doc.roundedRect(10, y, W - 20, 52, 4, 4, 'S');
+
+        // Left accent bar
+        doc.setFillColor(...C.mid);
+        doc.roundedRect(10, y, 4, 52, 2, 2, 'F');
+
+        // Section title
+        doc.setTextColor(...C.blue);
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(8.5);
+        doc.text('SENSOR PARAMETERS', 20, y + 9);
+
+        if (lastAnalysisData) {
+            const p = lastAnalysisData.payload;
+            const species = p.type.charAt(0).toUpperCase() + p.type.slice(1);
+
+            // Four parameter boxes — evenly spaced with better sizing
+            const totalW = W - 28;
+            const boxW = 40;
+            const totalBoxW = 4 * boxW;
+            const totalGap = totalW - totalBoxW;
+            const gap = totalGap / 5;
+
+            const boxes = [
+                { label: 'SPECIES',     value: species,  unit: '', color: C.mid  },
+                { label: 'TEMPERATURE', value: p.temp,   unit: 'C', color: [239,68,68] },
+                { label: 'LIGHT',       value: p.light,  unit: 'Lx', color: [245,158,11] },
+                { label: 'pH LEVEL',    value: p.ph,     unit: '', color: [139,92,246] },
+            ];
+
+            boxes.forEach((b, i) => {
+                const bx = 14 + gap + i * (boxW + gap);
+                const by = y + 15;
+
+                // Card shadow effect
+                doc.setFillColor(200, 215, 240);
+                doc.roundedRect(bx + 1, by + 1, boxW, 28, 3, 3, 'F');
+
+                // Card white background
+                doc.setFillColor(255, 255, 255);
+                doc.roundedRect(bx, by, boxW, 28, 3, 3, 'F');
+
+                // Colored top strip
+                doc.setFillColor(...b.color);
+                doc.roundedRect(bx, by, boxW, 5, 3, 3, 'F');
+                doc.rect(bx, by + 2.5, boxW, 2.5, 'F');
+
+                // Label
+                doc.setTextColor(100, 116, 139);
+                doc.setFont('helvetica', 'normal');
+                doc.setFontSize(6);
+                doc.text(b.label, bx + boxW / 2, by + 13, { align: 'center' });
+
+                // Value
+                doc.setTextColor(...C.navy);
+                doc.setFont('helvetica', 'bold');
+                // Smaller font if value is long
+                const valStr = String(b.value);
+                doc.setFontSize(valStr.length > 6 ? 9 : 12);
+                doc.text(valStr, bx + boxW / 2, by + 22, { align: 'center' });
+
+                // Unit small text
+                if (b.unit) {
+                    doc.setTextColor(...b.color);
+                    doc.setFont('helvetica', 'normal');
+                    doc.setFontSize(6);
+                    doc.text(b.unit, bx + boxW / 2, by + 27, { align: 'center' });
+                }
+            });
+        }
+
+        // ── 6. STATUS BADGE ───────────────────────────────────────────────
+        y += 60;
+        const rawStatus = lastAnalysisData ? lastAnalysisData.status : 'Unknown';
+        // Strip any percentage
+        const statusClean = rawStatus.replace(/\s*\(?\d+(\.\d+)?%\)?\s*/g, '').trim().toLowerCase();
+        const isHealthy  = statusClean === 'healthy';
+        const isNeedCare = statusClean.includes('care') || statusClean.includes('minor');
+
+        let bgColor, textColor, labelText;
+        if (isHealthy)       { bgColor = [220,252,231]; textColor = [22,101,52];  labelText = 'HEALTHY'; }
+        else if (isNeedCare) { bgColor = [254,243,199]; textColor = [146,64,14];  labelText = 'NEED CARE'; }
+        else                 { bgColor = [254,226,226]; textColor = [153,27,27];  labelText = 'NON-HEALTHY'; }
+
+        // Badge width auto based on label
+        const badgeW = isHealthy ? 46 : isNeedCare ? 58 : 66;
+        doc.setFillColor(...bgColor);
+        doc.roundedRect(10, y, badgeW, 12, 3, 3, 'F');
+        doc.setDrawColor(...textColor);
+        doc.setLineWidth(0.5);
+        doc.roundedRect(10, y, badgeW, 12, 3, 3, 'S');
+        doc.setTextColor(...textColor);
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(8.5);
+        doc.text(labelText, 10 + badgeW / 2, y + 7.8, { align: 'center' });
+
+        // Timestamp next to badge
+        doc.setTextColor(...C.muted);
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(8);
+        doc.text('Generated: ' + ts, 10 + badgeW + 6, y + 7.8);
+
+        // ── 7. DIVIDER ────────────────────────────────────────────────────
+        y += 18;
+        doc.setDrawColor(...C.border);
+        doc.setLineWidth(0.3);
+        doc.line(10, y, W - 10, y);
+
+        // ── 8. ANALYSIS SECTION ───────────────────────────────────────────
+        y += 8;
+
+        // Section header
+        doc.setFillColor(...C.mid);
+        doc.roundedRect(10, y, W - 20, 10, 2, 2, 'F');
+        doc.setTextColor(...C.white);
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(9);
+        doc.text('  ALGORA AI ANALYSIS', 13, y + 7);
+        y += 14;
+
+        if (lastAnalysisData && lastAnalysisData.explain.length) {
+            lastAnalysisData.explain.forEach((line, i) => {
+                const stripped = line.replace(/^[•\-]\s*/, '');
+                const wrapped = doc.splitTextToSize(stripped, W - 42);
+
+                // Alternating row bg
+                if (i % 2 === 0) {
+                    doc.setFillColor(...C.bg);
+                    doc.rect(10, y - 4, W - 20, wrapped.length * 5.5 + 4, 'F');
+                }
+
+                // Blue bullet circle
+                doc.setFillColor(...C.mid);
+                doc.circle(16, y - 0.5, 1.8, 'F');
+
+                doc.setFont('helvetica', 'normal');
+                doc.setFontSize(9);
+                doc.setTextColor(...C.slate);
+                doc.text(wrapped, 21, y);
+                y += wrapped.length * 5.5 + 4;
+            });
+        } else {
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(9);
+            doc.setTextColor(...C.muted);
+            doc.text('No analysis data available.', 16, y);
+            y += 8;
+        }
+
+        // ── 9. DIVIDER ────────────────────────────────────────────────────
+        y += 4;
+        doc.setDrawColor(...C.border);
+        doc.setLineWidth(0.3);
+        doc.line(10, y, W - 10, y);
+
+        // ── 10. RECOMMENDED ACTIONS SECTION ──────────────────────────────
+        y += 8;
+
+        // Section header — green
+        doc.setFillColor(...C.green);
+        doc.roundedRect(10, y, W - 20, 10, 2, 2, 'F');
+        doc.setTextColor(...C.white);
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(9);
+        doc.text('  RECOMMENDED ACTIONS', 13, y + 7);
+        y += 14;
+
+        if (lastAnalysisData && lastAnalysisData.recommend.length) {
+            lastAnalysisData.recommend.forEach((rec, idx) => {
+                const stripped = rec.replace(/^[•\-]\s*/, '');
+                const wrapped = doc.splitTextToSize(stripped, W - 44);
+
+                // Row bg
+                if (idx % 2 === 0) {
+                    doc.setFillColor(240, 253, 244);
+                    doc.rect(10, y - 4, W - 20, wrapped.length * 5.5 + 4, 'F');
+                }
+
+                // Numbered circle
+                doc.setFillColor(...C.green);
+                doc.circle(16, y - 0.5, 3, 'F');
+                doc.setTextColor(...C.white);
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(7);
+                doc.text(String(idx + 1), 16, y + 1.2, { align: 'center' });
+
+                doc.setFont('helvetica', 'normal');
+                doc.setFontSize(9);
+                doc.setTextColor(...C.slate);
+                doc.text(wrapped, 23, y);
+                y += wrapped.length * 5.5 + 5;
+            });
+        } else {
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(9);
+            doc.setTextColor(...C.muted);
+            doc.text('No recommendations available.', 16, y);
+            y += 8;
+        }
+
+
+
+        // ── 12. FOOTER ────────────────────────────────────────────────────
+        const footerY = H - 20;
+
+        // Footer band
+        doc.setFillColor(...C.navy);
+        doc.rect(0, footerY - 2, W, 22, 'F');
+
+        // Cyan accent line
+        doc.setFillColor(...C.sky);
+        doc.rect(0, footerY - 2, W, 1.5, 'F');
+
+        // Logo text in footer
+        doc.setTextColor(...C.white);
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(9);
+        doc.text('ALGORA', 14, footerY + 6);
+        doc.setTextColor(...C.lightBlue);
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(7);
+        doc.text('AI Health Monitor', 14, footerY + 12);
+
+        // Center contact
+        doc.setTextColor(...C.lightBlue);
+        doc.setFontSize(7.5);
+        doc.text('ya.business55@gmail.com  |  01070050167', W / 2, footerY + 7, { align: 'center' });
+
+        // Right — copyright + page
+        doc.setTextColor(...C.muted);
+        doc.setFontSize(7);
+        doc.text('Algora Intelligence © 2026', W - 14, footerY + 6, { align: 'right' });
+        doc.text('Page 1 of 1', W - 14, footerY + 12, { align: 'right' });
+
+        // ── SAVE ──────────────────────────────────────────────────────────
+        doc.save(`Algora_Report_${Date.now()}.pdf`);
+    }
+</script>
+</body>
+</html>
